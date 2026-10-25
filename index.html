@@ -102,6 +102,27 @@ model-viewer { width: 100%; height: 100%; background: transparent; --poster-colo
 .opt.wrong { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--surface)); }
 .why { font-size: 14px; color: var(--muted); margin: 0; }
 
+/* Camera mode: live camera behind the model, full screen, controls on top */
+.cam-btn { position: absolute; top: 12px; left: 12px; border: 1.5px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 12px; font-weight: 600; font-size: 15px; display: inline-flex; align-items: center; gap: 6px; z-index: 3; }
+.cam-btn svg { width: 18px; height: 18px; }
+.cam-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; z-index: 0; display: none; }
+.stage model-viewer { position: relative; z-index: 1; }
+.stage .xray { z-index: 3; }
+.cam-bar { display: none; }
+.cam-msg { position: absolute; left: 12px; right: 12px; top: 60px; margin: 0; z-index: 3; font-size: 14px; background: var(--surface); color: var(--ink); padding: 8px 12px; border-radius: 8px; text-align: center; }
+body.cam-on { overflow: hidden; }
+body.cam-on .stage { position: fixed; inset: 0; z-index: 50; height: 100dvh; min-height: 0; border-radius: 0; background: #000; }
+body.cam-on .cam-video { display: block; }
+body.cam-on .ar-btn, body.cam-on .no-ar { display: none; }
+body.cam-on .cam-btn { top: max(12px, env(safe-area-inset-top)); left: max(12px, env(safe-area-inset-left)); }
+body.cam-on .stage .xray { top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); }
+body.cam-on .cam-bar { display: flex; flex-direction: column; gap: 8px; position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; padding: 12px max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left)); background: linear-gradient(to top, rgba(0,0,0,.55), rgba(0,0,0,0)); }
+.cam-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.cam-title { color: #fff; font-family: var(--font-display); font-weight: 700; font-size: 26px; line-height: 1; text-shadow: 0 1px 4px rgba(0,0,0,.6); }
+.cam-bar .play { align-self: auto; }
+.cam-bar .picker { padding-block: 0; max-width: 640px; width: 100%; margin: 0 auto; }
+.cam-hint { color: #fff; font-size: 13px; margin: 0; text-shadow: 0 1px 3px rgba(0,0,0,.7); }
+
 @media (max-width: 760px) {
   .cols { grid-template-columns: minmax(0, 1fr); }
 }
@@ -132,7 +153,20 @@ model-viewer { width: 100%; height: 100%; background: transparent; --poster-colo
       <button class="hotspot" slot="hotspot-raise" data-key="raise" data-position="-0.126 0.0958 0" data-normal="-1 0 0" aria-label="Worm and wheel">3</button>
       <button class="hotspot" slot="hotspot-extend" data-key="extend" data-position="0.036 0.1128 0.0312" data-normal="0 0 1" aria-label="Rack and pinion">4</button>
     </model-viewer>
+    <video class="cam-video" id="camvideo" playsinline muted autoplay aria-hidden="true"></video>
+    <button class="cam-btn" id="cambtn" aria-pressed="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+      <span id="camlabel">Camera</span>
+    </button>
     <button class="xray" id="xray" aria-pressed="false">X-ray</button>
+    <p class="cam-msg" id="cammsg" hidden></p>
+    <div class="cam-bar" id="cambar">
+      <div class="cam-row">
+        <span class="cam-title" id="camtitle"></span>
+        <button class="play" id="camplay">Play</button>
+      </div>
+      <p class="cam-hint">Drag to turn &#xb7; Pinch to zoom &#xb7; Tap a number to pick a mechanism</p>
+    </div>
     <p class="no-ar" id="noar" hidden>AR isn&#x2019;t available here. Open this lesson on a phone or iPad in Safari or Chrome to place the fire engine on your desk.</p>
   </section>
 
@@ -148,6 +182,15 @@ model-viewer { width: 100%; height: 100%; background: transparent; --poster-colo
           <li>Move your device slowly over the table until the fire engine appears.</li>
           <li>Drag to move it. Pinch to make it bigger or smaller.</li>
           <li>Put the real toy next to it and compare the parts.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Using Camera mode</h3>
+        <ol class="steps">
+          <li>Tap <b>Camera</b> and allow camera access.</li>
+          <li>Point your device at your desk. The fire engine appears over the camera view.</li>
+          <li>Tap the numbers or the buttons at the bottom, press <b>Play</b>, and turn on <b>X-ray</b>.</li>
+          <li>Tap <b>Exit camera</b> to return to the lesson.</li>
         </ol>
       </div>
       <p class="note">Android phones play the animations in AR. iPhone and iPad show the model still in AR, so play each animation in the 3D view first.</p>
@@ -230,6 +273,7 @@ function renderCard() {
     <div><h3>How it works</h3><p>${m.how}</p></div>
     <div class="toy"><h3>Try it on the real toy</h3><p>${m.toy}</p></div>`;
   document.getElementById('play').addEventListener('click', () => play(m.anim));
+  document.getElementById('camtitle').textContent = `${m.num}. ${m.title}`;
 }
 
 function select(k, autoplay) {
@@ -247,6 +291,7 @@ function playAll() {
   ORDER.forEach(n => { document.getElementById(`pick-${n}`).setAttribute('aria-pressed', 'false'); mv.querySelector(`[data-key="${n}"]`).classList.remove('active'); });
   document.getElementById('pick-all').setAttribute('aria-pressed', 'true');
   highlight(null);
+  document.getElementById('camtitle').textContent = 'All mechanisms';
   play('All');
 }
 
@@ -287,6 +332,50 @@ mv.addEventListener('load', () => {
   setXray(xray);
   if (!mv.canActivateAR) document.getElementById('noar').hidden = false;
 });
+
+// ---------- Camera mode ----------
+const camBtn = document.getElementById('cambtn');
+const camVideo = document.getElementById('camvideo');
+const camBar = document.getElementById('cambar');
+const camMsg = document.getElementById('cammsg');
+const pickerHome = picker.nextElementSibling;
+let camStream = null;
+function camError(text) { camMsg.textContent = text; camMsg.hidden = false; setTimeout(() => { camMsg.hidden = true; }, 6000); }
+async function startCamera() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    camError('This browser cannot use the camera. Try Safari on iPad or Chrome on Android.'); return;
+  }
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: 'environment' } }, audio: false });
+  } catch (e) {
+    camError(e && e.name === 'NotAllowedError'
+      ? 'Camera blocked. Allow camera access for this site in your browser settings, then try again.'
+      : 'Could not start the camera on this device.');
+    return;
+  }
+  camVideo.srcObject = camStream;
+  try { await camVideo.play(); } catch (e) {}
+  document.body.classList.add('cam-on');
+  camBar.appendChild(picker);
+  camBtn.setAttribute('aria-pressed', 'true');
+  document.getElementById('camlabel').textContent = 'Exit camera';
+}
+function stopCamera() {
+  if (camStream) camStream.getTracks().forEach(t => t.stop());
+  camStream = null;
+  camVideo.srcObject = null;
+  document.body.classList.remove('cam-on');
+  pickerHome.parentNode.insertBefore(picker, pickerHome);
+  camBtn.setAttribute('aria-pressed', 'false');
+  document.getElementById('camlabel').textContent = 'Camera';
+}
+camBtn.addEventListener('click', () => camStream ? stopCamera() : startCamera());
+document.getElementById('camplay').addEventListener('click', () => {
+  const allOn = document.getElementById('pick-all').getAttribute('aria-pressed') === 'true';
+  play(allOn ? 'All' : MECHS[current].anim);
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && camStream) stopCamera(); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && camStream) stopCamera(); });
 
 // ---------- Quiz ----------
 const quizEl = document.getElementById('quiz');
