@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden]{display:none!important} body{margin:0} img{max-width:100%}</style>
+<title>Fire Engine AR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<script type="module" src="model-viewer.min.js"></script>
+</head>
+<body>
+<style>
+/* Layout: phone first. Model stage on top, mechanism picker under the thumb, lesson card and quiz below. */
+:root {
+  --bg: #eef0f1;
+  --surface: #ffffff;
+  --stage: #e3e7ea;
+  --ink: #1a1d21;
+  --muted: #5a6169;
+  --line: #d3d8dc;
+  --red: #c4211a;
+  --red-ink: #ffffff;
+  --signal: #e8a900;
+  --signal-soft: #fff3cc;
+  --good: #1f7a45;
+  --bad: #b3261e;
+  --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111316; --surface: #1a1d21; --stage: #181b1f; --ink: #eceef0; --muted: #9aa2aa;
+    --line: #2d3238; --red: #ff4b3e; --red-ink: #1a0503; --signal: #ffc41f; --signal-soft: #3a3110;
+    --good: #5fd08e; --bad: #ff8a80; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111316; --surface: #1a1d21; --stage: #181b1f; --ink: #eceef0; --muted: #9aa2aa;
+  --line: #2d3238; --red: #ff4b3e; --red-ink: #1a0503; --signal: #ffc41f; --signal-soft: #3a3110;
+  --good: #5fd08e; --bad: #ff8a80; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.5; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); max-width: 1100px; margin: 0 auto; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--signal); outline-offset: 2px; }
+
+.top { padding-block: 16px 12px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 2px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(32px, 6vw, 46px); line-height: 1; margin: 0; }
+h1 span { color: var(--red); }
+
+.stage { position: relative; background: var(--stage); border-radius: 14px; overflow: hidden; height: min(62vh, 620px); min-height: 360px; }
+model-viewer { width: 100%; height: 100%; background: transparent; --poster-color: transparent; --progress-bar-color: var(--red); }
+.ar-btn { position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%); background: var(--red); color: var(--red-ink); border: 0; border-radius: 999px; padding: 12px 22px; font-weight: 600; font-size: 17px; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 14px rgba(0,0,0,.25); white-space: nowrap; }
+.ar-btn svg { width: 22px; height: 22px; }
+.xray { position: absolute; top: 12px; right: 12px; border: 1.5px solid var(--line); background: var(--surface); border-radius: 8px; padding: 7px 12px; font-weight: 600; font-size: 15px; }
+.xray[aria-pressed="true"] { background: var(--signal); border-color: var(--signal); color: #1a1d21; }
+.hotspot { border: 2px solid var(--surface); background: var(--ink); color: var(--surface); width: 28px; height: 28px; border-radius: 50%; font-family: var(--font-mono); font-size: 13px; padding: 0; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+.hotspot.active { background: var(--signal); color: #1a1d21; border-color: #1a1d21; }
+.hotspot:not([data-visible]) { opacity: .35; }
+.no-ar { position: absolute; left: 12px; right: 12px; bottom: 12px; margin: 0; font-size: 14px; color: var(--muted); background: color-mix(in srgb, var(--surface) 90%, transparent); padding: 8px 12px; border-radius: 8px; text-align: center; }
+
+.picker { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; padding-block: 12px; }
+.pick { border: 1.5px solid var(--line); background: var(--surface); border-radius: 10px; padding: 8px 2px 7px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-weight: 600; font-size: 14px; color: var(--muted); }
+.pick b { font-family: var(--font-mono); font-weight: 500; font-size: 12px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid currentColor; }
+.pick[aria-pressed="true"] { color: var(--ink); border-color: var(--signal); background: var(--signal-soft); }
+.pick[aria-pressed="true"] b { background: var(--signal); border-color: var(--signal); color: #1a1d21; }
+.pick.all b { border-style: dashed; }
+
+.cols { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; align-items: start; padding-block: 4px 8px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.card h2 { font-family: var(--font-display); font-size: 30px; line-height: 1.05; margin: 0; }
+.type { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--red); margin: 0 0 4px; }
+.motion { display: grid; grid-template-columns: minmax(0,1fr) auto minmax(0,1fr); gap: 8px; }
+.motion > div { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; min-width: 0; }
+.motion small { display: block; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); }
+.motion span { font-weight: 600; font-size: 14px; line-height: 1.3; display: block; }
+.motion .arrow { border: 0; display: grid; place-items: center; color: var(--muted); padding: 0; }
+.play { align-self: flex-start; background: var(--red); color: var(--red-ink); border: 0; border-radius: 8px; padding: 8px 16px; font-weight: 600; }
+.card h3 { font-size: 13px; font-family: var(--font-mono); font-weight: 500; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin: 0 0 4px; }
+.card p { margin: 0; }
+.toy { border-left: 3px solid var(--red); padding: 4px 0 4px 12px; }
+.steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+.note { font-size: 13px; color: var(--muted); }
+
+.quiz { padding-block: 24px 48px; }
+.quiz-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 8px 16px; margin-bottom: 14px; }
+.quiz h2 { font-family: var(--font-display); font-size: 34px; margin: 0; line-height: 1; }
+.score { font-family: var(--font-mono); font-size: 15px; font-variant-numeric: tabular-nums; }
+.qgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); gap: 12px; }
+.q { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.q p.qtext { font-weight: 600; margin: 0; }
+.q p.qtext i { font-style: normal; font-family: var(--font-mono); font-size: 12px; color: var(--muted); display: block; margin-bottom: 2px; }
+.opts { display: flex; flex-direction: column; gap: 6px; }
+.opt { text-align: left; border: 1.5px solid var(--line); background: var(--bg); border-radius: 8px; padding: 10px 12px; font-size: 15px; }
+.opt:disabled { cursor: default; }
+.opt.right { border-color: var(--good); background: color-mix(in srgb, var(--good) 14%, var(--surface)); }
+.opt.wrong { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 12%, var(--surface)); }
+.why { font-size: 14px; color: var(--muted); margin: 0; }
+
+@media (max-width: 760px) {
+  .cols { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) {
+  .pick { font-size: 12px; }
+  .motion { grid-template-columns: minmax(0,1fr); }
+  .motion .arrow { transform: rotate(90deg); }
+}
+</style>
+
+<header class="wrap top">
+  <p class="eyebrow">D&amp;T &#xb7; Mechanisms in a toy fire engine</p>
+  <h1>Fire Engine <span>AR</span></h1>
+</header>
+
+<main class="wrap">
+  <section class="stage" aria-label="3D model of the fire engine">
+    <model-viewer id="mv" src="fire-engine.glb" alt="A toy fire engine with a ladder on a turntable"
+      ar ar-modes="webxr scene-viewer quick-look" camera-controls touch-action="pan-y"
+      shadow-intensity="1" exposure="1.1" environment-image="neutral"
+      camera-orbit="40deg 68deg auto" interaction-prompt="none">
+      <button slot="ar-button" class="ar-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2 3 7v10l9 5 9-5V7l-9-5Z"/><path d="m3 7 9 5 9-5M12 12v10"/></svg>
+        View on your desk
+      </button>
+      <button class="hotspot" slot="hotspot-steer" data-key="steer" data-position="0.084 0.127 0" data-normal="0 1 0" aria-label="Steering">1</button>
+      <button class="hotspot" slot="hotspot-swivel" data-key="swivel" data-position="-0.03 0.0624 0.0396" data-normal="0 0 1" aria-label="Turntable">2</button>
+      <button class="hotspot" slot="hotspot-raise" data-key="raise" data-position="-0.126 0.0958 0" data-normal="-1 0 0" aria-label="Worm and wheel">3</button>
+      <button class="hotspot" slot="hotspot-extend" data-key="extend" data-position="0.036 0.1128 0.0312" data-normal="0 0 1" aria-label="Rack and pinion">4</button>
+    </model-viewer>
+    <button class="xray" id="xray" aria-pressed="false">X-ray</button>
+    <p class="no-ar" id="noar" hidden>AR isn&#x2019;t available here. Open this lesson on a phone or iPad in Safari or Chrome to place the fire engine on your desk.</p>
+  </section>
+
+  <nav class="picker" id="picker" aria-label="Mechanisms"></nav>
+
+  <div class="cols">
+    <article class="card" id="card" aria-live="polite"></article>
+    <aside class="card">
+      <div>
+        <h3>Using AR</h3>
+        <ol class="steps">
+          <li>Tap <b>View on your desk</b>.</li>
+          <li>Move your device slowly over the table until the fire engine appears.</li>
+          <li>Drag to move it. Pinch to make it bigger or smaller.</li>
+          <li>Put the real toy next to it and compare the parts.</li>
+        </ol>
+      </div>
+      <p class="note">Android phones play the animations in AR. iPhone and iPad show the model still in AR, so play each animation in the 3D view first.</p>
+      <p class="note">Gear sizes in this model are chosen for teaching and may differ from your toy.</p>
+    </aside>
+  </div>
+</main>
+
+<section class="wrap quiz" aria-labelledby="quiz-title">
+  <div class="quiz-head">
+    <h2 id="quiz-title">Check your understanding</h2>
+    <div class="score" id="score">0 / 6 correct</div>
+  </div>
+  <div class="qgrid" id="quiz"></div>
+</section>
+
+<script type="module">
+const MECHS = {
+  steer: {
+    num: 1, tab: 'Steer', title: 'Steering', type: 'Linkage', anim: 'Steer',
+    input: 'Rotary: turn the roof gear', output: 'Angular: front wheels pivot left and right',
+    how: 'The roof gear sits on top of a vertical steering column. At the bottom, a short crank swings sideways as the column turns. It pushes a tie rod, a bar that joins the two front wheels. Each wheel has its own steering arm, so both wheels pivot together. Turn on X-ray to see the column inside the cab.',
+    toy: 'Turn the roof gear slowly and look under the cab. Which part slides sideways?'
+  },
+  swivel: {
+    num: 2, tab: 'Swivel', title: 'Turntable', type: 'Rotating platform', anim: 'Swivel',
+    input: 'Push the ladder base by hand', output: 'Rotary: ladder turns about an upright axis',
+    how: 'The ladder base sits on a large, flat white gear that spins on a central pin. Pushing the base turns everything on top of it. On a real fire engine, this lets the crew aim the ladder at a building on any side without moving the truck.',
+    toy: 'Swivel the ladder all the way round. Does anything stop it?'
+  },
+  raise: {
+    num: 3, tab: 'Raise', title: 'Worm and wheel', type: 'Worm gear', anim: 'Raise',
+    input: 'Rotary: turn the rear knob', output: 'Slow rotary: the ladder tilts up',
+    how: 'The rear knob turns a worm, a gear shaped like a screw. Each full turn moves the worm wheel on the ladder pivot by one tooth. With 24 teeth, the knob turns 24 times for one turn of the wheel: a 24 : 1 reduction. The wheel cannot turn the worm backwards, so the ladder stays up when you let go. This is called self-locking.',
+    toy: 'Count the knob turns to raise the ladder fully. Then press gently on the raised ladder. Does it move?'
+  },
+  extend: {
+    num: 4, tab: 'Extend', title: 'Rack and pinion', type: 'Rack and pinion', anim: 'Extend',
+    input: 'Rotary: turn the side knob', output: 'Linear: the upper ladder slides out',
+    how: 'The side knob turns a small round gear called the pinion. It meshes with a rack, a straight strip of teeth under the upper ladder. As the pinion turns, it pushes the rack along, so rotary motion becomes linear motion. One turn moves the rack by the pinion\u2019s circumference: \u03c0 \u00d7 1.2 cm \u2248 3.8 cm.',
+    toy: 'Turn the knob exactly one turn and measure how far the ladder slides.'
+  }
+};
+const ORDER = ['steer', 'swivel', 'raise', 'extend'];
+const QUIZ = [
+  { m: 'Steering', q: 'What does the tie rod do?', o: ['Joins the front wheels so they turn together', 'Drives the back wheels', 'Locks the ladder in place', 'Turns the turntable'], a: 0, why: 'The tie rod links both steering arms, so one input steers both wheels.' },
+  { m: 'Turntable', q: 'What does the turntable let a fire crew do?', o: ['Make the ladder longer', 'Aim the ladder in any direction without moving the truck', 'Steer the front wheels', 'Lift the ladder higher'], a: 1, why: 'It rotates the whole ladder about an upright axis.' },
+  { m: 'Worm and wheel', q: 'The worm is single-start and the worm wheel has 24 teeth. How many knob turns make the wheel turn once?', o: ['1', '12', '24', '48'], a: 2, why: 'Each turn of a single-start worm moves the wheel one tooth, so 24 turns.' },
+  { m: 'Worm and wheel', q: 'Why does the ladder stay raised when you let go of the knob?', o: ['The rack holds it up', 'The turntable is heavy', 'The worm gear is self-locking', 'The tie rod pushes on it'], a: 2, why: 'A worm wheel cannot drive the worm backwards, so the load cannot lower the ladder.' },
+  { m: 'Rack and pinion', q: 'Which mechanism changes rotary motion into linear motion?', o: ['Worm and wheel', 'Rack and pinion', 'Turntable', 'Steering column'], a: 1, why: 'The turning pinion slides the straight rack along.' },
+  { m: 'Rack and pinion', q: 'The pinion moves the rack 3.8 cm per turn. How far does the ladder extend in 2 turns?', o: ['1.9 cm', '3.8 cm', '5.8 cm', '7.6 cm'], a: 3, why: '2 \u00d7 3.8 cm = 7.6 cm.' }
+];
+
+const mv = document.getElementById('mv');
+const picker = document.getElementById('picker');
+const card = document.getElementById('card');
+let current = 'steer', xray = false, base = {};
+
+// ---------- Picker ----------
+[...ORDER, 'all'].forEach(k => {
+  const b = document.createElement('button');
+  b.className = 'pick' + (k === 'all' ? ' all' : '');
+  b.id = `pick-${k}`;
+  b.innerHTML = k === 'all' ? '<b>\u25b6</b>Play all' : `<b>${MECHS[k].num}</b>${MECHS[k].tab}`;
+  b.addEventListener('click', () => k === 'all' ? playAll() : select(k, true));
+  picker.appendChild(b);
+});
+mv.querySelectorAll('.hotspot').forEach(h => h.addEventListener('click', () => select(h.dataset.key, true)));
+
+function renderCard() {
+  const m = MECHS[current];
+  card.innerHTML = `
+    <div><p class="type">${m.num} of 4 \u00b7 ${m.type}</p><h2>${m.title}</h2></div>
+    <div class="motion">
+      <div><small>Input</small><span>${m.input}</span></div>
+      <div class="arrow" aria-hidden="true">\u2192</div>
+      <div><small>Output</small><span>${m.output}</span></div>
+    </div>
+    <button class="play" id="play">Play animation</button>
+    <div><h3>How it works</h3><p>${m.how}</p></div>
+    <div class="toy"><h3>Try it on the real toy</h3><p>${m.toy}</p></div>`;
+  document.getElementById('play').addEventListener('click', () => play(m.anim));
+}
+
+function select(k, autoplay) {
+  current = k;
+  ORDER.forEach(n => {
+    document.getElementById(`pick-${n}`).setAttribute('aria-pressed', String(n === k));
+    mv.querySelector(`[data-key="${n}"]`).classList.toggle('active', n === k);
+  });
+  document.getElementById('pick-all').setAttribute('aria-pressed', 'false');
+  renderCard();
+  highlight(k);
+  if (autoplay) play(MECHS[k].anim);
+}
+function playAll() {
+  ORDER.forEach(n => { document.getElementById(`pick-${n}`).setAttribute('aria-pressed', 'false'); mv.querySelector(`[data-key="${n}"]`).classList.remove('active'); });
+  document.getElementById('pick-all').setAttribute('aria-pressed', 'true');
+  highlight(null);
+  play('All');
+}
+
+// ---------- Model: animations, highlight, X-ray ----------
+let ready = false;
+function play(name) {
+  if (!ready) return;
+  mv.animationName = name;
+  mv.currentTime = 0;
+  mv.play({ repetitions: 1 });
+}
+const GROUP = { steer: 'Steer', swivel: 'Swivel', raise: 'Raise', extend: 'Extend' };
+function highlight(k) {
+  if (!ready) return;
+  for (const m of mv.model.materials) {
+    const on = k && m.name.startsWith(GROUP[k] + '-');
+    m.setEmissiveFactor(on ? [0.5, 0.33, 0] : [0, 0, 0]);
+  }
+}
+function setXray(on) {
+  xray = on;
+  document.getElementById('xray').setAttribute('aria-pressed', String(on));
+  if (!ready) return;
+  for (const m of mv.model.materials) {
+    const alpha = m.name.startsWith('Cab-') ? 0.15 : m.name.startsWith('Ladder-') ? 0.4 : 1;
+    if (alpha === 1) continue;
+    const c = base[m.name];
+    m.setAlphaMode(on ? 'BLEND' : 'OPAQUE');
+    m.pbrMetallicRoughness.setBaseColorFactor(on ? [c[0], c[1], c[2], alpha] : c);
+  }
+}
+document.getElementById('xray').addEventListener('click', () => setXray(!xray));
+
+mv.addEventListener('load', () => {
+  ready = true;
+  for (const m of mv.model.materials) base[m.name] = [...m.pbrMetallicRoughness.baseColorFactor];
+  highlight(current);
+  setXray(xray);
+  if (!mv.canActivateAR) document.getElementById('noar').hidden = false;
+});
+
+// ---------- Quiz ----------
+const quizEl = document.getElementById('quiz');
+let correct = 0;
+QUIZ.forEach((item, qi) => {
+  const d = document.createElement('div');
+  d.className = 'q';
+  d.innerHTML = `<p class="qtext"><i>Q${qi + 1} \u00b7 ${item.m}</i>${item.q}</p><div class="opts">${item.o.map((o, i) => `<button class="opt" data-i="${i}">${o}</button>`).join('')}</div><p class="why" hidden></p>`;
+  d.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+    const i = +b.dataset.i;
+    d.querySelectorAll('.opt').forEach(x => { x.disabled = true; if (+x.dataset.i === item.a) x.classList.add('right'); });
+    const why = d.querySelector('.why');
+    why.hidden = false;
+    if (i === item.a) { correct++; why.textContent = 'Correct. ' + item.why; }
+    else { b.classList.add('wrong'); why.textContent = 'Not quite. ' + item.why; }
+    document.getElementById('score').textContent = `${correct} / ${QUIZ.length} correct`;
+  }));
+  quizEl.appendChild(d);
+});
+
+select('steer', false);
+</script>
+
+</body>
+</html>
