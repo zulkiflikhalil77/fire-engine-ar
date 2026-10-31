@@ -175,6 +175,8 @@ body.cam-on .labels-btn { top: max(12px, env(safe-area-inset-top)); }
       <button class="lab" slot="hotspot-turntable" data-lab="turntable" data-position="-0.03 0.0582 0.0384" data-normal="0 0 1" tabindex="-1"><i></i><span>Turntable</span></button>
       <button class="lab U" slot="hotspot-ladder" data-lab="ladder" data-position="-0.004 0.1224 0.0204" data-normal="0 0 1" tabindex="-1"><i></i><span>Ladder</span></button>
       <button class="lab" slot="hotspot-rknob" data-lab="rknob" data-position="-0.1236 0.0958 0.012" data-normal="0 0 1" tabindex="-1"><i></i><span>Rear knob</span></button>
+      <button class="lab" slot="hotspot-tierod" data-lab="tierod" data-position="0.0672 0.0372 0" data-normal="0 0 1" tabindex="-1"><i></i><span>Tie rod</span></button>
+      <button class="lab L" slot="hotspot-sarm" data-lab="sarm" data-position="0.0756 0.0372 0.0396" data-normal="0 0 1" tabindex="-1"><i></i><span>Steering arm</span></button>
       <button class="lab L" slot="hotspot-sknob" data-lab="sknob" data-position="0.036 0.1128 0.0264" data-normal="0 0 1" tabindex="-1"><i></i><span>Side knob</span></button>
     </model-viewer>
     <video class="cam-video" id="camvideo" playsinline muted autoplay aria-hidden="true"></video>
@@ -219,8 +221,8 @@ body.cam-on .labels-btn { top: max(12px, env(safe-area-inset-top)); }
 
 <script type="module">
 const ACTS = {
-  steer:  { tab: 'Steer',  icon: '1', anim: 'Steer',  group: 'Steer',  labels: ['roof', 'front'],
-            text: '<b>Steer:</b> turn the roof gear and the front wheels turn left and right.' },
+  steer:  { tab: 'Steer',  icon: '1', anim: 'Steer',  group: 'Steer',  labels: ['roof', 'tierod', 'sarm', 'front'],
+            text: '<b>Steer:</b> turn the roof gear and the tie rod slides sideways. It pushes both steering arms, so the front wheels turn left and right together.' },
   rotate: { tab: 'Rotate', icon: '2', anim: 'Swivel', group: 'Swivel', labels: ['sgear', 'turntable'],
             text: '<b>Rotate:</b> turn the small gear and the turntable rotates slowly, so the ladder can face any direction.' },
   raise:  { tab: 'Raise',  icon: '3', anim: 'Raise',  group: 'Raise',  labels: ['rknob', 'ladder'],
