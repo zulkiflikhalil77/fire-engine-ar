@@ -171,6 +171,7 @@ body.cam-on .labels-btn { top: max(12px, env(safe-area-inset-top)); }
       <button class="lab" slot="hotspot-roof" data-lab="roof" data-position="0.084 0.1218 0.018" data-normal="0 0 1" tabindex="-1"><i></i><span>Roof gear</span></button>
       <button class="lab" slot="hotspot-front" data-lab="front" data-position="0.084 0.024 0.0564" data-normal="0 0 1" tabindex="-1"><i></i><span>Front wheels</span></button>
       <button class="lab" slot="hotspot-rear" data-lab="rear" data-position="-0.078 0.024 0.0564" data-normal="0 0 1" tabindex="-1"><i></i><span>Rear wheels</span></button>
+      <button class="lab L" slot="hotspot-sgear" data-lab="sgear" data-position="-0.03 0.064 0.0694" data-normal="0 0 1" tabindex="-1"><i></i><span>Small gear</span></button>
       <button class="lab" slot="hotspot-turntable" data-lab="turntable" data-position="-0.03 0.0582 0.0384" data-normal="0 0 1" tabindex="-1"><i></i><span>Turntable</span></button>
       <button class="lab U" slot="hotspot-ladder" data-lab="ladder" data-position="-0.004 0.1224 0.0204" data-normal="0 0 1" tabindex="-1"><i></i><span>Ladder</span></button>
       <button class="lab" slot="hotspot-rknob" data-lab="rknob" data-position="-0.1236 0.0958 0.012" data-normal="0 0 1" tabindex="-1"><i></i><span>Rear knob</span></button>
@@ -220,8 +221,8 @@ body.cam-on .labels-btn { top: max(12px, env(safe-area-inset-top)); }
 const ACTS = {
   steer:  { tab: 'Steer',  icon: '1', anim: 'Steer',  group: 'Steer',  labels: ['roof', 'front'],
             text: '<b>Steer:</b> turn the roof gear and the front wheels turn left and right.' },
-  rotate: { tab: 'Rotate', icon: '2', anim: 'Swivel', group: 'Swivel', labels: ['turntable'],
-            text: '<b>Rotate:</b> push the ladder base and the turntable rotates, so the ladder can face any direction.' },
+  rotate: { tab: 'Rotate', icon: '2', anim: 'Swivel', group: 'Swivel', labels: ['sgear', 'turntable'],
+            text: '<b>Rotate:</b> turn the small gear and the turntable rotates slowly, so the ladder can face any direction.' },
   raise:  { tab: 'Raise',  icon: '3', anim: 'Raise',  group: 'Raise',  labels: ['rknob', 'ladder'],
             text: '<b>Raise:</b> turn the rear knob and the ladder tilts up. Let go and it stays up.' },
   extend: { tab: 'Extend', icon: '4', anim: 'Extend', group: 'Extend', labels: ['sknob', 'ladder'],

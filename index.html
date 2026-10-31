@@ -149,7 +149,7 @@ body.cam-on .cam-bar { display: flex; flex-direction: column; gap: 8px; position
         View on your desk
       </button>
       <button class="hotspot" slot="hotspot-steer" data-key="steer" data-position="0.084 0.127 0" data-normal="0 1 0" aria-label="Steering">1</button>
-      <button class="hotspot" slot="hotspot-swivel" data-key="swivel" data-position="-0.03 0.0624 0.0396" data-normal="0 0 1" aria-label="Turntable">2</button>
+      <button class="hotspot" slot="hotspot-swivel" data-key="swivel" data-position="-0.03 0.0624 0.0396" data-normal="0 0 1" aria-label="Turntable gears">2</button>
       <button class="hotspot" slot="hotspot-raise" data-key="raise" data-position="-0.126 0.0958 0" data-normal="-1 0 0" aria-label="Worm and wheel">3</button>
       <button class="hotspot" slot="hotspot-extend" data-key="extend" data-position="0.036 0.1128 0.0312" data-normal="0 0 1" aria-label="Rack and pinion">4</button>
     </model-viewer>
@@ -216,10 +216,10 @@ const MECHS = {
     toy: 'Turn the roof gear slowly and look under the cab. Which part slides sideways?'
   },
   swivel: {
-    num: 2, tab: 'Swivel', title: 'Turntable', type: 'Rotating platform', anim: 'Swivel',
-    input: 'Push the ladder base by hand', output: 'Rotary: ladder turns about an upright axis',
-    how: 'The ladder base sits on a large, flat white gear that spins on a central pin. Pushing the base turns everything on top of it. On a real fire engine, this lets the crew aim the ladder at a building on any side without moving the truck.',
-    toy: 'Swivel the ladder all the way round. Does anything stop it?'
+    num: 2, tab: 'Swivel', title: 'Turntable', type: 'Spur gears', anim: 'Swivel',
+    input: 'Rotary: turn the small black gear by hand', output: 'Slow rotary: the turntable turns about an upright axis',
+    how: 'The ladder base sits on a large white gear with 40 teeth. A small black gear with 16 teeth meshes with its edge. Turning the small gear by hand drives the large gear, so the turntable turns the other way. The ratio is 40 : 16 = 2.5 : 1, so the small gear turns 2.5 times for one turn of the turntable. This lets the crew aim the ladder at a building on any side without moving the truck.',
+    toy: 'Count how many times you turn the small gear to swing the ladder all the way round. Does it match the ratio?'
   },
   raise: {
     num: 3, tab: 'Raise', title: 'Worm and wheel', type: 'Worm gear', anim: 'Raise',
@@ -237,7 +237,7 @@ const MECHS = {
 const ORDER = ['steer', 'swivel', 'raise', 'extend'];
 const QUIZ = [
   { m: 'Steering', q: 'What does the tie rod do?', o: ['Joins the front wheels so they turn together', 'Drives the back wheels', 'Locks the ladder in place', 'Turns the turntable'], a: 0, why: 'The tie rod links both steering arms, so one input steers both wheels.' },
-  { m: 'Turntable', q: 'What does the turntable let a fire crew do?', o: ['Make the ladder longer', 'Aim the ladder in any direction without moving the truck', 'Steer the front wheels', 'Lift the ladder higher'], a: 1, why: 'It rotates the whole ladder about an upright axis.' },
+  { m: 'Turntable', q: 'The small gear has 16 teeth and the turntable gear has 40. How many turns of the small gear turn the turntable once?', o: ['1', '2.5', '16', '40'], a: 1, why: '40 \u00f7 16 = 2.5, so the ratio is 2.5 : 1.' },
   { m: 'Worm and wheel', q: 'The worm is single-start and the worm wheel has 24 teeth. How many knob turns make the wheel turn once?', o: ['1', '12', '24', '48'], a: 2, why: 'Each turn of a single-start worm moves the wheel one tooth, so 24 turns.' },
   { m: 'Worm and wheel', q: 'Why does the ladder stay raised when you let go of the knob?', o: ['The rack holds it up', 'The turntable is heavy', 'The worm gear is self-locking', 'The tie rod pushes on it'], a: 2, why: 'A worm wheel cannot drive the worm backwards, so the load cannot lower the ladder.' },
   { m: 'Rack and pinion', q: 'Which mechanism changes rotary motion into linear motion?', o: ['Worm and wheel', 'Rack and pinion', 'Turntable', 'Steering column'], a: 1, why: 'The turning pinion slides the straight rack along.' },
